@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム - yuzutube</title>
+    <!-- 外部CSSの代わりに、必要なスタイルを直接埋め込みます -->
+    <style>
+        :root {
+            --yt-red: #ff0000;
+            --yt-text: #ffffff;
+            --yt-dark: #0f0f0f;
+            --yt-light-dark: #272727;
+            --yt-separator: #303030;
+            --yt-sub-text: #aaaaaa;
+        }
+        body {
+            /* Full screen dark theme, centered content */
+            background-color: var(--yt-dark);
+            color: var(--yt-text);
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; 
+            position: relative; /* 設定リンクの配置基準 */
+        }
+        .home-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .logo-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 24px;
+            color: var(--yt-red);
+        }
+        .logo-title span {
+            color: var(--yt-text);
+        }
+        .search-area {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 32px;
+        }
+        .search-area form {
+            display: flex;
+            width: 100%;
+        }
+        .search-area input {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--yt-separator);
+            background-color: var(--yt-light-dark);
+            color: var(--yt-text);
+            border-radius: 24px 0 0 24px;
+            outline: none;
+            font-size: 16px;
+        }
+        .search-area button {
+            background-color: var(--yt-light-dark);
+            border: 1px solid var(--yt-separator);
+            color: var(--yt-text);
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 0 24px 24px 0;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        .search-area button:hover {
+            background-color: var(--yt-separator);
+        }
+        .counter-image {
+            margin-top: 30px;
+            border-radius: 4px;
+            border: 1px solid var(--yt-separator);
+        }
+        .setting-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: var(--yt-sub-text);
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .setting-link:hover {
+            color: var(--yt-text);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 設定ページへのリンク (右上に配置) -->
+    <a href="/setting" class="setting-link">設定</a>
+
+    <div class="home-container">
+        
+        <h1 class="logo-title">
+            yuzu<span style="color: var(--yt-text);">tube</span>
+        </h1>
+
+        <div class="search-area">
+            <!-- フォームは/searchエンドポイントを使用 -->
+            <form action="/search" method="get">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="動画を検索..." 
+                    required>
+                <button type="submit">
+                    検索
+                </button>
+            </form>
+        </div>
+
+        <div>
+            <img src="https://count.getloli.com/@yuzuzuzu?name=yuzuzuzu&theme=original-new&padding=5&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="yuzuzuzu-counter" class="counter-image" />
+        </div>
+
+    </div>
+
+</body>
+</html>

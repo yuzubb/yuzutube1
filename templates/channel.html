@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ channel_name }} - yuzutube{% endblock %}
+
+{% block content %}
+<div class="channel-page-container" style="max-width: 1400px; margin: 0 auto; padding-top: 24px;">
+    {% if cover_img_url %}
+    <div class="channel-banner" style="height: 200px; background-image: url({{ cover_img_url }}); background-size: cover; background-position: center; border-radius: 12px;"></div>
+    {% endif %}
+
+    <div class="channel-header" style="display: flex; align-items: center; padding: 20px 0;">
+        <img src="{{ channel_icon }}" style="width: 120px; height: 120px; border-radius: 50%; margin-right: 24px;">
+        <div>
+            <h1 style="font-size: 32px; margin: 0;">{{ channel_name }}</h1>
+            <p style="color: var(--yt-sub-text); margin: 4px 0;">チャンネル登録者数: {{ subscribers_count }}</p>
+        </div>
+    </div>
+    
+    <div class="channel-description" style="margin: 20px 0; padding: 20px; background-color: var(--yt-light-dark); border-radius: 8px;">
+        <h2 style="font-size: 20px;">概要</h2>
+        <p>{{ channel_profile | safe }}</p>
+    </div>
+
+    <h2 style="font-size: 24px; margin-top: 40px;">最新動画</h2>
+    <div class="latest-videos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+        {% for video in results %}
+        <div class="video-grid-card">
+            <a href="/watch?v={{ video.id }}">
+                <img src="/thumbnail?v={{ video.id }}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px;">
+            </a>
+            <h3 style="font-size: 16px; margin: 8px 0;"><a href="/watch?v={{ video.id }}">{{ video.title }}</a></h3>
+            <p style="color: var(--yt-sub-text); font-size: 14px;">{{ video.view_count_text }} | {{ video.length_str }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

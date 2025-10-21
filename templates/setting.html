@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>視聴設定 - YuZu Proxy</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+    <!-- ヘッダー (style.cssの.headerクラスを使用) -->
+    <header class="header">
+        <div class="logo">
+            <a href="/">Yu<span>Zu</span></a>
+        </div>
+        <nav>
+            <!-- 現在は設定ページなので、設定へのリンクは不要、または強調表示 -->
+            <a href="/" style="margin-right: 20px; color: var(--yt-sub-text);">ホーム</a>
+            <a href="/setting" style="color: var(--yt-red);">設定</a>
+        </nav>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <div class="content">
+        <div class="setting-container">
+            <h2>視聴オプション設定</h2>
+            
+            <form method="POST" action="/setting">
+                
+                <!-- Stream URLで視聴 設定項目 -->
+                <div class="setting-item">
+                    <div class="setting-item-header">
+                        <label for="streamurl_enabled">🎥 Stream URLで視聴</label>
+                        <input type="checkbox" id="streamurl_enabled" name="streamurl_enabled" {% if streamurl_enabled %}checked{% endif %}>
+                    </div>
+                    <p>直接的な動画ストリームURLを使用して再生を試みます。Invidious APIからの直接ストリームリンクを利用することで、ブラウザの互換性によってはYouTubeドメインへのアクセスを完全に回避できます。</p>
+                </div>
+
+                <!-- YouTube (nocookie) ドメインで埋め込み 設定項目 -->
+                <div class="setting-item">
+                    <div class="setting-item-header">
+                        <label for="nocookie_enabled">🍪 YouTube (nocookie) ドメインで埋め込み</label>
+                        <input type="checkbox" id="nocookie_enabled" name="nocookie_enabled" {% if nocookie_enabled %}checked{% endif %}>
+                    </div>
+                    <p>動画埋め込みに <code>youtube-nocookie.com</code> ドメインを使用します。これにより、ユーザーが動画を再生するまでYouTubeがCookieを設定することを防ぎます。</p>
+                </div>
+
+                <button type="submit" class="save-button">設定を保存</button>
+            </form>
+            
+            <p style="margin-top: 30px; color: var(--yt-sub-text); font-size: 13px;">※これらの設定は、ブラウザのCookieに保存されます。Cookieをクリアすると設定はリセットされます。</p>
+        </div>
+    </div>
+
+    <!-- フッターは省略 -->
+</body>
+</html>

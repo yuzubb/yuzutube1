@@ -1,0 +1,223 @@
+/* --- 1. グローバル変数 (YouTube風の配色) --- */
+:root {
+    --yt-red: #ff0000;          /* YouTube Red */
+    --yt-dark: #0f0f0f;         /* 背景色: 濃い黒 */
+    --yt-light-dark: #272727;   /* カード/入力フィールドの背景色 */
+    --yt-text: #ffffff;         /* メインテキスト色 */
+    --yt-sub-text: #aaaaaa;     /* サブテキスト/メタデータ色 */
+    --yt-separator: #303030;    /* 区切り線/ボーダー色 */
+}
+
+/* --- 2. 基本リセットと設定 --- */
+body {
+    background-color: var(--yt-dark);
+    color: var(--yt-text);
+    font-family: 'Roboto', Arial, sans-serif;
+    margin: 0;
+    padding-top: 56px; /* ヘッダーの高さ分、コンテンツを下にずらす */
+    line-height: 1.4;
+}
+
+a {
+    color: var(--yt-text);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--yt-sub-text);
+}
+
+/* --- 3. ヘッダー/ナビゲーション --- */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    background-color: var(--yt-dark);
+    border-bottom: 1px solid var(--yt-separator);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 100; /* 最前面に配置 */
+}
+
+.logo {
+    color: var(--yt-text);
+    font-size: 20px;
+    font-weight: bold;
+    margin-right: 40px;
+    cursor: pointer;
+}
+
+.logo span {
+    color: var(--yt-red); /* YuZuの部分を赤くする */
+}
+
+/* 検索バーのレイアウト */
+.search-bar {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center; /* 中央に寄せる */
+}
+
+.search-bar form {
+    display: flex;
+    width: 600px; /* 検索フォームの最大幅 */
+    max-width: 100%;
+}
+
+.search-bar input {
+    flex-grow: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--yt-separator);
+    background-color: var(--yt-light-dark);
+    color: var(--yt-text);
+    border-radius: 20px 0 0 20px;
+    outline: none;
+    font-size: 16px;
+}
+
+.search-bar button {
+    background-color: var(--yt-light-dark);
+    border: 1px solid var(--yt-separator);
+    color: var(--yt-text);
+    padding: 8px 20px;
+    cursor: pointer;
+    border-radius: 0 20px 20px 0;
+    font-size: 16px;
+}
+
+/* --- 4. ページ共通コンテナ --- */
+.content {
+    min-height: calc(100vh - 56px); /* 画面の高さいっぱいまでコンテンツエリアを広げる */
+}
+
+/* --- 5. 動画/検索結果カード (search.html) --- */
+.video-card {
+    display: flex;
+    margin-bottom: 24px;
+}
+
+.video-card img {
+    width: 360px; /* 検索結果のサムネイルサイズ */
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-right: 16px;
+}
+
+.video-meta {
+    flex-grow: 1;
+}
+
+.video-meta h3 a {
+    font-size: 18px;
+    margin: 0 0 4px 0;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 2行まで表示 */
+    -webkit-box-orient: vertical;
+}
+
+.video-meta p {
+    color: var(--yt-sub-text);
+    font-size: 14px;
+    margin: 6px 0;
+}
+
+/* チャンネルカード */
+.channel-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-right: 16px;
+}
+
+/* --- 6. 動画視聴ページ (video.html) --- */
+.watch-page-container {
+    display: flex;
+    padding: 24px;
+}
+
+.main-video-area {
+    flex-basis: 70%;
+    margin-right: 24px;
+}
+
+.recommended-videos {
+    flex-basis: 30%;
+}
+
+.metadata {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--yt-separator);
+    padding-bottom: 8px;
+}
+
+.channel-info img {
+    border-radius: 50%;
+}
+
+.description {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: var(--yt-light-dark);
+    border-radius: 8px;
+    white-space: pre-wrap; /* descriptionHtmlの改行を保持 */
+}
+
+.recommended-card a {
+    display: flex;
+}
+
+.recommended-card img {
+    width: 168px;
+    height: 94px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.recommended-meta p {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+/* --- 7. チャンネルページ (channel.html) --- */
+.channel-banner {
+    background-color: var(--yt-light-dark); /* バナーがない場合の背景 */
+}
+
+.channel-header {
+    border-bottom: 1px solid var(--yt-separator);
+}
+
+.channel-header h1 {
+    line-height: 1.1;
+}
+
+.channel-description {
+    background-color: var(--yt-light-dark);
+}
+
+.latest-videos-grid {
+    /* グリッドレイアウトはCSSファイルに移行 */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+/* --- 8. コメントページ (comments.html) --- */
+.comment-card {
+    border-bottom: 1px solid var(--yt-separator);
+}
+
+.comment-card img {
+    border-radius: 50%;
+}

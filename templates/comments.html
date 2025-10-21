@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}コメント - yuzutube{% endblock %}
+
+{% block content %}
+<div class="comments-container" style="max-width: 800px; margin: 24px auto; padding: 0 24px;">
+
+    {% for comment in comments %}
+    <div class="comment-card" style="display: flex; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--yt-separator);">
+        <a href="/channel/{{ comment.authorid }}">
+            <img src="{{ comment.authoricon }}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 15px;">
+        </a>
+        <div class="comment-body">
+            <p style="font-weight: bold; font-size: 14px; margin: 0 0 4px 0;">
+                <a href="/channel/{{ comment.authorid }}">{{ comment.author }}</a>
+            </p>
+            <p style="font-size: 14px; margin: 0;">{{ comment.body | safe }}</p>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

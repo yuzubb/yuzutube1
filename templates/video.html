@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}{{ video_title }} - yuzutube{% endblock %}
+
+{% block content %}
+<div class="watch-page-container">
+    <div class="main-video-area">
+        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+            <button id="yuzu-btn" onclick="showPlayer('yuzutube-player', 'normal');" 
+                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
+                通常再生
+            </button>
+            
+            <button id="high-quality-btn" onclick="showPlayer('high-quality-player', 'high_quality');" 
+                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
+                高画質再生
+            </button>
+        
+            <button id="youtube-btn" onclick="showPlayer('youtube-embed-player');" 
+                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
+                YT再生
+            </button>
+            
+            <button id="edu-btn" onclick="showPlayer('edu-embed-player');" 
+                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
+                eduで視聴
+            </button>
+
+            {# ダウンロードボタンの追加 #}
+            <button id="download-btn" onclick="startDownload();" 
+                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: #3b5998; font-weight: bold;">
+                ダウンロード
+            </button>
+        </div>
+
+        {# Yuzutube Player (通常再生用): ソースは動的ロードに完全に切り替え #}
+        <div id="yuzutube-player" style="display: none; width: 100%; aspect-ratio: 16/9; background-color: black; position: relative; overflow: hidden; border-radius: 8px;">
+            <video style="outline:none;width:100%; height: 100%;" playsinline="" 
+                   poster="/thumbnail?v={{ videoid }}" 
+                   id="player" 
+                   class="video-js w-full" 
+                   controls="" 
+                   loadedmetadata="settime()" 
+                   loop="">
+                お使いのブラウザは動画再生に対応していません。
+            </video>
+        </div>
+
+        {# 高画質再生用のIframe Player #}
+        <div id="high-quality-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
+            <iframe width="100%" height="100%"
+                src=""
+                frameborder="0"
+                allow="fullscreen; picture-in-picture"
+                allowfullscreen
+                id="high-quality-iframe"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+        {# Youtube Embed Player #}
+        <div id="youtube-embed-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
+            <iframe width="100%" height="100%"
+                src="https://www.youtube-nocookie.com/embed/{{ videoid }}"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                id="youtube-iframe"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+        {# EDU埋め込み専用 Player #}
+        <div id="edu-embed-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
+            <iframe width="100%" height="100%"
+                src=""
+                frameborder="0"
+                allow="fullscreen; picture-in-picture"
+                allowfullscreen
+                id="edu-iframe"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            </iframe>
+        </div>
+
+        <h1 style="font-size: 24px; margin: 16px 0;">{{ video_title }}</h1>
+
+        <div class="metadata">
+            <div class="channel-info">
+                <a href="/channel/{{ author_id }}">
+                    <img src="{{ author_icon }}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover;">
+                </a>
+                <div>
+                    <a href="/channel/{{ author_id }}" style="color: var(--yt-text); font-weight: bold;">{{ author }}</a>
+                    <p style="font-size: 12px; color: var(--yt-sub-text);">チャンネル登録者数: {{ subscribers_count }}</p>
+                </div>
+            </div>
+            <div class="counts" style="color: var(--yt-sub-text); font-size: 14px;">
+                <span>{{ view_count }} 回視聴</span>
+                <span style="margin-left: 10px;">👍 {{ like_count }}</span>
+            </div>
+        </div>
+        
+        <div class="description">
+            <p style="white-space: pre-wrap;">{{ description | safe }}</p>
+        </div>
+
+        <div id="comments-container" style="margin-top: 24px; padding: 16px; background-color: var(--yt-light-dark); border-radius: 8px;">
+            <h2 style="font-size: 20px; margin-bottom: 16px;">コメント</h2>
+            <div id="comment-list" style="color: var(--yt-sub-text);">
+                コメントを読み込み中...
+            </div>
+        </div>
+    </div>
+
+    <div class="recommended-videos">
+        <h2 style="font-size: 18px; margin-top: 0;">おすすめ</h2>
+        {% for video in recommended_videos %}
+        <div class="recommended-card">
+            <a href="/watch?v={{ video.video_id }}">
+                <img src="/thumbnail?v={{ video.video_id }}" style="object-fit: cover;">
+                <div class="recommended-meta">
+                    <p style="color: var(--yt-text);">{{ video.title }}</p>
+                    <p style="color: var(--yt-sub-text);">{{ video.author }}</p>
+                    <p style="color: var(--yt-sub-text);">{{ video.view_count_text }}</p>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    let cached360pUrl = null; 
+
+    const videoElement = document.getElementById('player');
+    const videoId = '{{ videoid }}';
+    const yuzuBtn = document.getElementById('yuzu-btn');
+    const highQualityBtn = document.getElementById('high-quality-btn');
+    const youtubeBtn = document.getElementById('youtube-btn');
+    const eduBtn = document.getElementById('edu-btn');
+    const downloadBtn = document.getElementById('download-btn'); // 新規
+    
+    const yuzuPlayer = document.getElementById('yuzutube-player');
+    const highQualityPlayer = document.getElementById('high-quality-player');
+    const youtubePlayer = document.getElementById('youtube-embed-player');
+    const eduPlayer = document.getElementById('edu-embed-player');
+    
+    const highQualityIframe = document.getElementById('high-quality-iframe');
+    const youtubeIframe = document.getElementById('youtube-iframe');
+    const eduIframe = document.getElementById('edu-iframe'); 
+    
+
+    /**
+     * 360pストリームURLを取得する（キャッシュ利用）
+     */
+    async function get360pUrl(videoId) {
+        if (cached360pUrl) {
+            return cached360pUrl;
+        }
+
+        // ロード中はボタンを無効化
+        if (yuzuBtn) {
+            yuzuBtn.textContent = '通常再生 読み込み中...';
+            yuzuBtn.disabled = true;
+        }
+        if (downloadBtn) { 
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'ダウンロード準備中...';
+        }
+        
+        try {
+            const response = await fetch(`/api/stream_360p_url/${videoId}`); 
+            if (!response.ok) throw new Error('360pストリームの取得に失敗しました。');
+            const data = await response.json();
+            
+            if (data.error) throw new Error(data.error);
+            
+            cached360pUrl = data.stream_url;
+            
+            // 成功時: ボタンを有効化
+            if (yuzuBtn) {
+                yuzuBtn.textContent = '通常再生';
+                yuzuBtn.disabled = false;
+            }
+            if (downloadBtn) {
+                downloadBtn.textContent = 'ダウンロード';
+                downloadBtn.disabled = false;
+            }
+            return cached360pUrl;
+            
+        } catch (error) {
+            console.error('360p URLの取得エラー:', error);
+            
+            // 失敗時: ボタンを無効化し、エラー表示
+            if (yuzuBtn) {
+                yuzuBtn.textContent = '通常再生 (失敗)';
+                yuzuBtn.disabled = true;
+                yuzuBtn.style.backgroundColor = 'red';
+            }
+            if (downloadBtn) {
+                downloadBtn.textContent = 'ダウンロード (失敗)';
+                downloadBtn.disabled = true;
+                downloadBtn.style.backgroundColor = 'red';
+            }
+            alert('360pストリーム（音声付き）の取得に失敗しました。');
+            return null;
+        }
+    }
+    
+    /**
+     * ダウンロードを開始する
+     */
+    async function startDownload() {
+        if (downloadBtn) {
+            downloadBtn.textContent = 'ダウンロード開始...';
+            downloadBtn.disabled = true;
+        }
+        
+        const url360p = await get360pUrl(videoId);
+        
+        if (downloadBtn) {
+            // get360pUrlの結果に基づき、ボタンの状態を復元
+            if (url360p) {
+                downloadBtn.textContent = 'ダウンロード';
+                downloadBtn.disabled = false;
+            }
+        }
+
+        if (url360p) {
+            // ダウンロード属性を持つ一時的な <a> タグを作成
+            const a = document.createElement('a');
+            a.href = url360p;
+            a.download = `${videoId}.mp4`; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } else {
+            alert('ダウンロードURLの取得に失敗しました。');
+        }
+    }
+
+
+    /**
+     * コメントをロードする関数
+     */
+    function loadComments(videoId) {
+        const commentList = document.getElementById('comment-list');
+        commentList.innerHTML = '<div style="color: var(--yt-sub-text);">コメントを読み込み中...</div>';
+        fetch(`/comments?v=${videoId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('コメントの読み込みに失敗しました。');
+                return response.text();
+            })
+            .then(html => {
+                commentList.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('コメントのロード中にエラーが発生:', error);
+                commentList.innerHTML = '<div style="color: red; padding: 10px;">コメントの読み込み中にエラーが発生しました。</div>';
+            });
+    }
+
+    /**
+     * 動画プレーヤーを切り替え、ボタンのスタイルを更新し、非表示にする側の動画を停止する関数
+     */
+    async function showPlayer(playerId, mode = 'normal') {
+        
+        // すべてのプレーヤーボタンを非アクティブな色にリセット
+        [yuzuBtn, highQualityBtn, youtubeBtn, eduBtn].forEach(btn => {
+            if (btn) btn.style.backgroundColor = 'var(--yt-bg)';
+        });
+        
+        // ダウンロードボタンの色をリセット
+        if (downloadBtn) {
+            downloadBtn.style.backgroundColor = '#3b5998';
+        }
+
+
+        // 全プレーヤーを非表示に設定
+        [yuzuPlayer, highQualityPlayer, youtubePlayer, eduPlayer].forEach(player => {
+            if (player) player.style.display = 'none';
+        });
+        
+        // プレーヤーのリセット/停止処理
+        
+        // <video>プレーヤーを停止 (通常再生用)
+        if (videoElement) {
+            videoElement.pause();
+            if (playerId !== 'yuzutube-player') {
+                videoElement.src = ''; 
+                videoElement.load(); // ソースをリセットしてロードを停止
+            }
+        }
+
+        // iframeのURLをリセット/停止
+        if (youtubeIframe) youtubeIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}`; 
+        if (eduIframe) eduIframe.src = ''; 
+        if (highQualityIframe) highQualityIframe.src = '';
+
+
+        // --- 選択されたプレーヤーの表示と処理 ---
+        
+        if (playerId === 'yuzutube-player') {
+            yuzuPlayer.style.display = 'block';
+
+            if (mode === 'normal') {
+                const url360p = await get360pUrl(videoId);
+                
+                if (url360p) {
+                    videoElement.src = url360p; 
+                    videoElement.load();
+                    if (yuzuBtn) yuzuBtn.style.backgroundColor = 'var(--yt-light-dark)';
+                } else {
+                    return; // URL取得失敗
+                }
+            }
+            
+        } else if (playerId === 'high-quality-player') {
+            
+            highQualityPlayer.style.display = 'block';
+            
+            if (highQualityIframe) {
+                const streamHighUrl = `/api/stream_high/${videoId}`;
+                if (highQualityIframe.src === '' || !highQualityIframe.src.includes(streamHighUrl)) {
+                    highQualityIframe.src = streamHighUrl;
+                }
+            }
+
+            if (highQualityBtn) highQualityBtn.style.backgroundColor = 'var(--yt-light-dark)';
+            
+        } else if (playerId === 'youtube-embed-player') {
+            
+            youtubePlayer.style.display = 'block';
+            
+            if (youtubeBtn) youtubeBtn.style.backgroundColor = 'var(--yt-light-dark)';
+            
+            // YouTube埋め込みを自動再生
+            if (youtubeIframe) {
+                let currentSrc = youtubeIframe.src;
+                if (!currentSrc.includes('autoplay=1')) {
+                    currentSrc += currentSrc.includes('?') ? '&autoplay=1' : '?autoplay=1';
+                }
+                youtubeIframe.src = currentSrc;
+            }
+            
+        } else if (playerId === 'edu-embed-player') {
+            
+            eduPlayer.style.display = 'block';
+            
+            if (eduBtn) eduBtn.style.backgroundColor = 'var(--yt-light-dark)';
+            
+            // EDU iframeのsrcを設定
+            if (eduIframe) {
+                if (eduIframe.src === '' || !eduIframe.src.includes(`/api/edu/${videoId}`)) {
+                    eduIframe.src = `/api/edu/${videoId}`;
+                }
+            }
+        }
+    }
+    
+
+    // ページロード時の初期設定
+    document.addEventListener('DOMContentLoaded', () => {
+        loadComments(videoId);
+        
+        // ページロード時は通常再生をアクティブにする
+        showPlayer('yuzutube-player', 'normal'); 
+    });
+</script>
+{% endblock %}

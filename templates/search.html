@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{% if word %}検索結果: {{ word }}{% else %}プレイリスト{% endif %} - yuzutube{% endblock %}
+
+{% block content %}
+<div class="search-results-container" style="max-width: 1200px; margin: 24px auto; padding: 0 24px;">
+    {% if word %}
+        <h2 style="font-size: 20px;">検索結果: <span style="font-weight: normal;">{{ word }}</span></h2>
+    {% else %}
+        <h2 style="font-size: 20px;">プレイリストの動画</h2>
+    {% endif %}
+
+    <div class="results-list" style="margin-top: 32px;">
+        {% for item in results %}
+            {% if item.type == 'video' %}
+                <div class="video-card">
+                    <a href="/watch?v={{ item.id }}"><img src="/thumbnail?v={{ item.id }}" alt="{{ item.title }}"></a>
+                    <div class="video-meta">
+                        <h3><a href="/watch?v={{ item.id }}">{{ item.title }}</a></h3>
+                        <p>{{ item.author }} - {{ item.view_count_text }}</p>
+                        <p>{{ item.published }} - {{ item.length }}</p>
+                    </div>
+                </div>
+            {% elif item.type == 'channel' %}
+                <div class="channel-card" style="display: flex; align-items: center; margin-bottom: 24px;">
+                    <a href="/channel/{{ item.id }}"><img src="{{ item.thumbnail }}" style="width: 80px; height: 80px; border-radius: 50%; margin-right: 16px;"></a>
+                    <div>
+                        <h3><a href="/channel/{{ item.id }}" style="color: var(--yt-text);">{{ item.author }}</a></h3>
+                        <p style="color: var(--yt-sub-text);">チャンネル</p>
+                    </div>
+                </div>
+            {% elif item.type == 'playlist' %}
+                 <div class="playlist-card video-card">
+                    <a href="/playlist?list={{ item.id }}"><img src="{{ item.thumbnail }}" alt="{{ item.title }}"></a>
+                    <div class="video-meta">
+                        <h3><a href="/playlist?list={{ item.id }}">{{ item.title }}</a></h3>
+                        <p style="color: var(--yt-sub-text);">動画数: {{ item.count }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="pagination" style="text-align: center; margin: 40px 0;">
+        <a href="{{ next }}" style="color: var(--yt-red); font-weight: bold; font-size: 18px;">次のページへ »</a>
+    </div>
+</div>
+{% endblock %}
