@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アクセスゲート - 学習用サイト</title>
+    <link rel="stylesheet" href="/static/css/style.css"> 
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #e0f7fa; /* Info background */
+            color: #00796b;
+            font-weight: bold;
+        }
+        .error {
+            background-color: #ffebee; /* Error background */
+            color: #c62828;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>学習用サイトへのアクセス</h1>
+        <form method="POST" action="/gate">
+            <input type="text" id="access_code" name="access_code" placeholder="パスワードの入力…" required autofocus>
+            <button type="submit">アクセス</button>
+        </form>
+        
+        <p style="margin-top: 20px; color: #777;">このページは、特定のアクセスコードを持つユーザーのみがサイトにアクセスするために使用されます。</p>
+    </div>
+</body>
+</html>
