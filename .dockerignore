@@ -1,0 +1,29 @@
+# Python 関連の無視ファイル/ディレクトリ
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.tox/
+.mypy_cache/
+.pytest_cache/
+.vscode/
+
+# Git 関連
+.git
+.gitignore
+
+# 不要な OS ファイル
+.DS_Store
+
+# IDE や一時ファイル
+*.bak
+*.swp
+*~
+
+# ログやデータファイル
+*.log
+data/
+media/
+dumps/
