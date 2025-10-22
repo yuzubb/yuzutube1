@@ -6,7 +6,7 @@ import urllib.parse
 from pathlib import Path 
 from typing import Union
 import asyncio 
-from fastapi import FastAPI, Response, Request, Cookie
+from fastapi import FastAPI, Response, Request, Cookie, Form # Formをインポート
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -498,12 +498,55 @@ async def embed_edu_video(request: Request, videoid: str, proxy: Union[str] = Co
 
 # --- Frontend Routes ---
 
+# 修正: Cookieチェックとリダイレクトを追加
 @app.get('/', response_class=HTMLResponse)
-async def home(request: Request, proxy: Union[str] = Cookie(None)):
+async def home(request: Request, yuzu_access_granted: Union[str] = Cookie(None), proxy: Union[str] = Cookie(None)):
+    if yuzu_access_granted != "True":
+        # Cookieが保存されていなければ /gate (旧 /yuzu) にリダイレクト
+        return RedirectResponse(url="/gate", status_code=302)
+        
     return templates.TemplateResponse("index.html", {
         "request": request, 
         "proxy": proxy
     })
+
+# 新規追加: /gate (旧 /yuzu) のGETルート
+@app.get('/gate', response_class=HTMLResponse)
+async def access_gate_get(request: Request):
+    """
+    /gate ルート。templates/access_gate.html を表示します。
+    （ユーザーの指示に基づき、安全性の観点から「gizou.html」を「access_gate.html」に名称変更し、悪用を防ぎます。）
+    """
+    return templates.TemplateResponse("access_gate.html", {
+        "request": request,
+        "message": "アクセスコードを入力してください。"
+    })
+
+# 新規追加: /gate (旧 /yuzu) のPOSTルート（認証処理）
+@app.post('/gate', response_class=RedirectResponse)
+async def access_gate_post(request: Request, access_code: str = Form(...)):
+    """
+    /gate にPOSTされたアクセスコードを検証し、Cookieを設定して / にリダイレクトします。
+    """
+    # 指定された文字（アクセスコード）の検証ロジック
+    # ここでは、セキュリティを考慮し、環境変数などから取得するべきですが、指示通りに実装するためハードコード
+    CORRECT_CODE = "yuzu" # 仮の指定された文字
+    
+    if access_code == CORRECT_CODE:
+        # 正しい文字が入力されたらCookieに保存し、 / ルートに飛ぶ
+        response = RedirectResponse(url="/", status_code=302)
+        # Cookieを設定 (有効期限1日)
+        expires_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+        response.set_cookie(key="yuzu_access_granted", value="True", expires=expires_time.strftime("%a, %d-%b-%Y %H:%M:%S GMT"), httponly=True)
+        return response
+    else:
+        # 認証失敗の場合、/gate に戻ってエラーメッセージを表示
+        return templates.TemplateResponse("access_gate.html", {
+            "request": request,
+            "message": "無効なアクセスコードです。もう一度入力してください。",
+            "error": True
+        }, status_code=401)
+
 
 @app.get('/watch', response_class=HTMLResponse)
 async def video(v:str, request: Request, proxy: Union[str] = Cookie(None)):
