@@ -23,10 +23,10 @@ def isJSON(json_str):
 
 # Global Configuration
 max_time = 10.0
-max_api_wait_time = (3.0, 5.0)
+max_api_wait_time = (3.0, 8.0)
 failed = "Load Failed"
 MAX_RETRIES = 10   # ストリームAPIリトライ回数
-RETRY_DELAY = 1.0 # ストリームAPIリトライ待機時間 (秒)
+RETRY_DELAY = 3.0 # ストリームAPIリトライ待機時間 (秒)
 
 # 新規追加: /api/edu で使用する外部ストリームAPIのURL
 EDU_STREAM_API_BASE_URL = "https://siawaseok.duckdns.org/api/stream/" 
@@ -432,7 +432,7 @@ async def embed_high_quality_video(request: Request, videoid: str, proxy: Union[
         
     except APITimeoutError as e:
         print(f"Error calling external stream API: {e}")
-        return Response(f"Failed to retrieve high-quality stream URLs: {e}", status_code=503)
+        return Response(f"Failed to retrieve high-quality stream URL", status_code=503)
         
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
