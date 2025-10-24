@@ -235,7 +235,7 @@ def get_360p_single_url(videoid: str) -> str:
     """
     外部APIから音声付きの360p単一ファイルのURLを抽出して返す (itag 18 優先)。
     """
-    YTDL_API_URL = f"https://ytdlp-cache-1.onrender.com/dl/{videoid}"
+    YTDL_API_URL = f"https://ytdlp-cache.vercel.app/dl/{videoid}"
     
     try:
         res = requests.get(
@@ -288,7 +288,7 @@ def fetch_high_quality_streams(videoid: str) -> dict:
     前提: requests, json, getRandomUserAgent, max_api_wait_time, APITimeoutError 
           は外部で定義/インポートされていること。
     """
-    YTDL_API_URL = f"https://ytdlp-cache-1.onrender.com/dl/{videoid}"
+    YTDL_API_URL = f"https://ytdlp-cache.vercel.app/dl/{videoid}"
     
     try:
         res = requests.get(
