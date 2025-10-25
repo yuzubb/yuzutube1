@@ -34,11 +34,16 @@ EDU_STREAM_API_BASE_URL = "https://siawaseok.duckdns.org/api/stream/"
 
 invidious_api_data = {
     'video': [
+        'https://invidious.f5.si/',
         'https://yt.omada.cafe/',
+        'https://inv.perditum.com/',
         'https://inv.perditum.com/',
         'https://iv.melmac.space/', 
         'https://invidious.nikkosphere.com/',
         'https://iv.duti.dev/',
+        'https://youtube.alt.tyil.nl/',
+        'https://inv.antopie.org/',
+        'https://lekker.gay/',
     ], 
     'playlist': [
         'https://invidious.ducks.party/',
@@ -50,6 +55,10 @@ invidious_api_data = {
         'https://iv.duti.dev/',
     ], 
     'search': [
+        'https://inv.vern.cc/',
+        'https://yt.thechangebook.org/',
+        'https://invidious.vern.cc/',
+        'https://invidious.materialio.us/',
         'https://invid-api.poketube.fun/',
         'https://invidious.ducks.party/',
         'https://super8.absturztau.be/',
