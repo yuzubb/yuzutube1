@@ -38,6 +38,7 @@ invidious_api_data = {
         'https://inv.perditum.com/',
         'https://iv.melmac.space/', 
         'https://invidious.nikkosphere.com/',
+        'https://iv.duti.dev/',
     ], 
     'playlist': [
         'https://invidious.ducks.party/',
@@ -46,6 +47,7 @@ invidious_api_data = {
         'https://invidious.ducks.party/',
         'https://yt.omada.cafe/',
         'https://iv.melmac.space/',
+        'https://iv.duti.dev/',
     ], 
     'search': [
         'https://invid-api.poketube.fun/',
@@ -55,6 +57,7 @@ invidious_api_data = {
         'https://invidious.ducks.party/',
         'https://yt.omada.cafe/',
         'https://iv.melmac.space/',
+        'https://iv.duti.dev/',
     ], 
     'channel': [
         'https://invid-api.poketube.fun/',
@@ -64,6 +67,7 @@ invidious_api_data = {
         'https://invidious.ducks.party/',
         'https://yt.omada.cafe/',
         'https://iv.melmac.space/',
+        'https://iv.duti.dev/',
     ], 
     'comments': [
         'https://invidious.ducks.party/',
@@ -71,6 +75,7 @@ invidious_api_data = {
         'https://invidious.nikkosphere.com/',
         'https://invidious.ducks.party/',
         'https://yt.omada.cafe/',
+        'https://iv.duti.dev/',
         'https://iv.melmac.space/',
     ]
 }
