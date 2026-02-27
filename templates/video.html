@@ -1,380 +1,545 @@
 {% extends "base.html" %}
 
-{% block title %}{{ video_title }} - yuzutube{% endblock %}
+{% block title %}{{ video_title }} - YouTube{% endblock %}
 
 {% block content %}
+<style>
+    :root {
+        --yt-bg: #0f0f0f;
+        --yt-text: #ffffff;
+        --yt-sub-text: #aaaaaa;
+        --yt-button-bg: #272727;
+        --yt-button-hover: #3f3f3f;
+        --skeleton-bg: #272727;
+    }
+
+    body {
+        background-color: var(--yt-bg);
+        color: var(--yt-text);
+        margin: 0;
+        font-family: "Roboto", "Arial", sans-serif;
+    }
+
+    .watch-page-container {
+        display: flex;
+        flex-direction: row;
+        gap: 24px;
+        padding: 20px 5%;
+        max-width: 1700px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 1000px) {
+        .watch-page-container { flex-direction: column; }
+    }
+
+    .main-video-area { flex: 3; }
+
+    /* スケルトンアニメーション */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+    }
+
+    .skeleton {
+        background-color: var(--skeleton-bg);
+        border-radius: 8px;
+        animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    /* プレーヤー */
+    .video-container {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background-color: black;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    /* ボタン群 */
+    .action-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .yt-btn {
+        padding: 0 16px;
+        height: 36px;
+        border-radius: 18px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: var(--yt-button-bg);
+        color: var(--yt-text);
+        display: flex;
+        align-items: center;
+        transition: background-color 0.2s;
+    }
+
+    .yt-btn:hover { background-color: var(--yt-button-hover); }
+
+    .yt-btn-primary { background-color: #f1f1f1; color: #0f0f0f; }
+
+    /* メタデータ */
+    .video-title { font-size: 20px; font-weight: bold; margin-bottom: 12px; }
+
+    .channel-section { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+    .author-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+    .description-box {
+        background-color: var(--yt-button-bg);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+        margin-top: 12px;
+    }
+
+    /* おすすめセクション */
+    .recommended-videos { flex: 1; min-width: 300px; }
+
+    .recommended-card {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        text-decoration: none;
+    }
+
+    .recommended-card img {
+        width: 168px;
+        aspect-ratio: 16/9;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    /* コメント用スケルトン */
+    .comment-skeleton {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .circle-skeleton { width: 40px; height: 40px; border-radius: 50%; }
+    .line-skeleton { height: 12px; margin-bottom: 8px; border-radius: 4px; }
+</style>
+
 <div class="watch-page-container">
     <div class="main-video-area">
-        <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-            <button id="yuzu-btn" onclick="showPlayer('yuzutube-player', 'normal');" 
-                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
-                通常再生
-            </button>
-            
-            <button id="high-quality-btn" onclick="showPlayer('high-quality-player', 'high_quality');" 
-                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
-                高画質再生
-            </button>
+        {# 操作バー #}
+        <div class="action-bar">
+            <button id="yuzu-btn" class="yt-btn" onclick="showPlayer('yuzutube-player');">通常再生</button>
+            <button id="youtube-btn" class="yt-btn" onclick="showPlayer('youtube-embed-player');">YouTube版</button>
+            <button id="edu-btn" class="yt-btn" onclick="showPlayer('edu-embed-player');">外部プレーヤー</button>
+            <div style="flex-grow: 1;"></div>
+            <button id="download-btn" class="yt-btn yt-btn-primary" onclick="startDownload();">オフライン保存</button>
+        </div>
+
+        {# プレーヤーエリア #}
+        <div id="yuzutube-player" class="video-container">
+            <video id="player" style="width:100%; height: 100%; outline:none;" playsinline controls poster="/thumbnail?v={{ videoid }}" loop></video>
+        </div>
+
+        <div id="youtube-embed-player" class="video-container" style="display: none;">
+            <iframe id="youtube-iframe" width="100%" height="100%" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <div id="edu-embed-player" class="video-container" style="display: none;">
+            <iframe id="edu-iframe" width="100%" height="100%" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <h1 class="video-title">{{ video_title }}</h1>
+
+        <div class="channel-section">
+            <a href="/channel/{{ author_id }}">
+                <img src="{{ author_icon }}" class="author-img">
+            </a>
+            <div>
+                <a href="/channel/{{ author_id }}" style="color: var(--yt-text); font-weight: bold; text-decoration: none;">{{ author }}</a>
+                <p style="font-size: 12px; color: var(--yt-sub-text); margin: 0;">{{ subscribers_count }}</p>
+            </div>
+            <button class="yt-btn" style="background-color: #f1f1f1; color: #0f0f0f; margin-left: 12px; font-weight: bold; border-radius: 18px;">チャンネル登録</button>
+            <div style="flex-grow: 1; text-align: right; color: var(--yt-sub-text); font-size: 14px;">
+                👍 {{ like_count }}
+            </div>
+        </div>
         
-            <button id="youtube-btn" onclick="showPlayer('youtube-embed-player');" 
-                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
-                YT再生
-            </button>
-            
-            <button id="edu-btn" onclick="showPlayer('edu-embed-player');" 
-                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: var(--yt-bg);">
-                eduで視聴
-            </button>
-
-            {# ダウンロードボタンの追加 #}
-            <button id="download-btn" onclick="startDownload();" 
-                style="padding: 8px 15px; cursor: pointer; border: 1px solid var(--yt-sub-text); color: var(--yt-text); background-color: #3b5998; font-weight: bold;">
-                ダウンロード
-            </button>
+        <div class="description-box">
+            <div style="font-weight: bold; margin-bottom: 4px;">{{ view_count }} • {{ length_text }}</div>
+            <p style="white-space: pre-wrap; margin: 0;">{{ description | safe }}</p>
         </div>
 
-        {# Yuzutube Player (通常再生用): ソースは動的ロードに完全に切り替え #}
-        <div id="yuzutube-player" style="display: none; width: 100%; aspect-ratio: 16/9; background-color: black; position: relative; overflow: hidden; border-radius: 8px;">
-            <video style="outline:none;width:100%; height: 100%;" playsinline="" 
-                   poster="/thumbnail?v={{ videoid }}" 
-                   id="player" 
-                   class="video-js w-full" 
-                   controls="" 
-                   loadedmetadata="settime()" 
-                   loop="">
-                お使いのブラウザは動画再生に対応していません。
-            </video>
-        </div>
-
-        {# 高画質再生用のIframe Player #}
-        <div id="high-quality-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
-            <iframe width="100%" height="100%"
-                src=""
-                frameborder="0"
-                allow="fullscreen; picture-in-picture"
-                allowfullscreen
-                id="high-quality-iframe"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-            </iframe>
-        </div>
-
-        {# Youtube Embed Player #}
-        <div id="youtube-embed-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
-            <iframe width="100%" height="100%"
-                src="https://www.youtube-nocookie.com/embed/{{ videoid }}"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-                id="youtube-iframe"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-            </iframe>
-        </div>
-
-        {# EDU埋め込み専用 Player #}
-        <div id="edu-embed-player" style="display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 8px;">
-            <iframe width="100%" height="100%"
-                src=""
-                frameborder="0"
-                allow="fullscreen; picture-in-picture"
-                allowfullscreen
-                id="edu-iframe"
-                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-            </iframe>
-        </div>
-
-        <h1 style="font-size: 24px; margin: 16px 0;">{{ video_title }}</h1>
-
-        <div class="metadata">
-            <div class="channel-info">
-                <a href="/channel/{{ author_id }}">
-                    <img src="{{ author_icon }}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover;">
-                </a>
-                <div>
-                    <a href="/channel/{{ author_id }}" style="color: var(--yt-text); font-weight: bold;">{{ author }}</a>
-                    <p style="font-size: 12px; color: var(--yt-sub-text);">{{ subscribers_count }}</p>
+        {# コメントセクション (スケルトン付き) #}
+        <div id="comments-container" style="margin-top: 24px;">
+            <h2 style="font-size: 18px; margin-bottom: 20px;">コメント</h2>
+            <div id="comment-list">
+                {% for i in range(3) %}
+                <div class="comment-skeleton">
+                    <div class="skeleton circle-skeleton"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton line-skeleton" style="width: 30%;"></div>
+                        <div class="skeleton line-skeleton" style="width: 80%;"></div>
+                    </div>
                 </div>
-            </div>
-            {# 修正: ビュー数、公開日、いいね数を表示 #}
-            <div class="counts" style="color: var(--yt-sub-text); font-size: 14px;">
-                <span>{{ view_count }}</span>
-                <span style="margin-left: 10px;">{{ length_text }}</span> 
-                <span style="margin-left: 10px;">👍 {{ like_count }}</span>
-            </div>
-        </div>
-        
-        <div class="description">
-            <p style="white-space: pre-wrap;">{{ description | safe }}</p>
-        </div>
-
-        <div id="comments-container" style="margin-top: 24px; padding: 16px; background-color: var(--yt-light-dark); border-radius: 8px;">
-            <h2 style="font-size: 20px; margin-bottom: 16px;">コメント</h2>
-            <div id="comment-list" style="color: var(--yt-sub-text);">
-                コメントを読み込み中...
+                {% endfor %}
             </div>
         </div>
     </div>
 
+    {# おすすめ動画 #}
     <div class="recommended-videos">
-        <h2 style="font-size: 18px; margin-top: 0;">おすすめ</h2>
-        {# 修正: サムネイルURLの直参照と、動画/プレイリストのタイプ別リンクに対応 #}
         {% for video in recommended_videos %}
         {% set link_url = "/watch?v=" + video.video_id if video.type == 'video' else "/playlist?list=" + video.id %}
-        <div class="recommended-card">
-            <a href="{{ link_url }}">
-                <img src="{{ video.thumbnail_url }}" style="object-fit: cover;">
-                <div class="recommended-meta">
-                    <p style="color: var(--yt-text);">{{ video.title }}</p>
-                    <p style="color: var(--yt-sub-text);">{{ video.author }}</p>
-                    <p style="font-size: 12px; color: var(--yt-sub-text);">
-                        {% if video.type == 'video' %}
-                            {{ video.view_count_text }}{% if video.view_count_text and video.published_text %} • {% endif %}{{ video.published_text }}
-                        {% else %}
-                            ミックスリスト
-                        {% endif %}
-                    </p>
-                </div>
-            </a>
-        </div>
+        <a href="{{ link_url }}" class="recommended-card">
+            <img src="{{ video.thumbnail_url }}">
+            <div class="recommended-meta">
+                <p style="color: var(--yt-text); font-weight: 500; font-size: 14px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ video.title }}</p>
+                <p style="color: var(--yt-sub-text); font-size: 12px;">{{ video.author }}</p>
+                <p style="color: var(--yt-sub-text); font-size: 12px;">{{ video.view_count_text }}</p>
+            </div>
+        </a>
         {% endfor %}
     </div>
 </div>
 
 <script>
     let cached360pUrl = null; 
-
-    const videoElement = document.getElementById('player');
     const videoId = '{{ videoid }}';
-    const yuzuBtn = document.getElementById('yuzu-btn');
-    const highQualityBtn = document.getElementById('high-quality-btn');
-    const youtubeBtn = document.getElementById('youtube-btn');
-    const eduBtn = document.getElementById('edu-btn');
-    const downloadBtn = document.getElementById('download-btn');
+    const videoElement = document.getElementById('player');
     
-    const yuzuPlayer = document.getElementById('yuzutube-player');
-    const highQualityPlayer = document.getElementById('high-quality-player');
-    const youtubePlayer = document.getElementById('youtube-embed-player');
-    const eduPlayer = document.getElementById('edu-embed-player');
-    
-    const highQualityIframe = document.getElementById('high-quality-iframe');
-    const youtubeIframe = document.getElementById('youtube-iframe');
-    const eduIframe = document.getElementById('edu-iframe'); 
-    
-
-    /**
-     * 360pストリームURLを取得する（キャッシュ利用）
-     */
-    async function get360pUrl(videoId) {
-        if (cached360pUrl) {
-            return cached360pUrl;
-        }
-
-        // ロード中はボタンを無効化
-        if (yuzuBtn) {
-            yuzuBtn.textContent = '通常再生 読み込み中...';
-            yuzuBtn.disabled = true;
-        }
-        if (downloadBtn) { 
-            downloadBtn.disabled = true;
-            downloadBtn.textContent = 'ダウンロード準備中...';
-        }
-        
+    async function get360pUrl() {
+        if (cached360pUrl) return cached360pUrl;
+        const btn = document.getElementById('yuzu-btn');
+        btn.innerHTML = '<div class="skeleton" style="width:60px; height:14px; border-radius:4px;"></div>';
         try {
-            const response = await fetch(`/api/stream_360p_url/${videoId}`); 
-            if (!response.ok) throw new Error('360pストリームの取得に失敗しました。');
+            const response = await fetch(`/api/stream_360p_url/${videoId}`);
             const data = await response.json();
-            
-            if (data.error) throw new Error(data.error);
-            
             cached360pUrl = data.stream_url;
-            
-            // 成功時: ボタンを有効化
-            if (yuzuBtn) {
-                yuzuBtn.textContent = '通常再生';
-                yuzuBtn.disabled = false;
-            }
-            if (downloadBtn) {
-                downloadBtn.textContent = 'ダウンロード';
-                downloadBtn.disabled = false;
-            }
+            btn.textContent = '通常再生';
             return cached360pUrl;
-            
-        } catch (error) {
-            console.error('360p URLの取得エラー:', error);
-            
-            // 失敗時: ボタンを無効化し、エラー表示
-            if (yuzuBtn) {
-                yuzuBtn.textContent = '通常再生 (失敗)';
-                yuzuBtn.disabled = true;
-                yuzuBtn.style.backgroundColor = 'red';
-            }
-            if (downloadBtn) {
-                downloadBtn.textContent = 'ダウンロード (失敗)';
-                downloadBtn.disabled = true;
-                downloadBtn.style.backgroundColor = 'red';
-            }
-            alert('360pストリーム（音声付き）の取得に失敗しました。');
+        } catch (e) {
+            btn.textContent = 'エラー';
             return null;
         }
     }
-    
-    /**
-     * ダウンロードを開始する
-     */
-    async function startDownload() {
-        if (downloadBtn) {
-            downloadBtn.textContent = 'ダウンロード開始...';
-            downloadBtn.disabled = true;
-        }
-        
-        const url360p = await get360pUrl(videoId);
-        
-        if (downloadBtn) {
-            // get360pUrlの結果に基づき、ボタンの状態を復元
-            if (url360p) {
-                downloadBtn.textContent = 'ダウンロード';
-                downloadBtn.disabled = false;
-            }
-        }
 
-        if (url360p) {
-            // ダウンロード属性を持つ一時的な <a> タグを作成
-            const a = document.createElement('a');
-            a.href = url360p;
-            a.download = `${videoId}.mp4`; 
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        } else {
-            alert('ダウンロードURLの取得に失敗しました。');
-        }
-    }
-
-
-    /**
-     * コメントをロードする関数
-     */
-    function loadComments(videoId) {
-        const commentList = document.getElementById('comment-list');
-        commentList.innerHTML = '<div style="color: var(--yt-sub-text);">コメントを読み込み中...</div>';
-        fetch(`/comments?v=${videoId}`)
-            .then(response => {
-                if (!response.ok) throw new Error('コメントの読み込みに失敗しました。');
-                return response.text();
-            })
-            .then(html => {
-                commentList.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('コメントのロード中にエラーが発生:', error);
-                commentList.innerHTML = '<div style="color: red; padding: 10px;">コメントの読み込み中にエラーが発生しました。</div>';
-            });
-    }
-
-    /**
-     * 動画プレーヤーを切り替え、ボタンのスタイルを更新し、非表示にする側の動画を停止する関数
-     */
-    async function showPlayer(playerId, mode = 'normal') {
-        
-        // すべてのプレーヤーボタンを非アクティブな色にリセット
-        [yuzuBtn, highQualityBtn, youtubeBtn, eduBtn].forEach(btn => {
-            if (btn) btn.style.backgroundColor = 'var(--yt-bg)';
+    async function showPlayer(playerId) {
+        ['yuzutube-player', 'youtube-embed-player', 'edu-embed-player'].forEach(id => {
+            document.getElementById(id).style.display = (id === playerId) ? 'block' : 'none';
         });
-        
-        // ダウンロードボタンの色をリセット
-        if (downloadBtn) {
-            downloadBtn.style.backgroundColor = '#3b5998';
-        }
 
+        videoElement.pause();
+        document.getElementById('youtube-iframe').src = '';
+        document.getElementById('edu-iframe').src = '';
 
-        // 全プレーヤーを非表示に設定
-        [yuzuPlayer, highQualityPlayer, youtubePlayer, eduPlayer].forEach(player => {
-            if (player) player.style.display = 'none';
-        });
-        
-        // プレーヤーのリセット/停止処理
-        
-        // <video>プレーヤーを停止 (通常再生用)
-        if (videoElement) {
-            videoElement.pause();
-            if (playerId !== 'yuzutube-player') {
-                videoElement.src = ''; 
-                videoElement.load(); // ソースをリセットしてロードを停止
-            }
-        }
-
-        // iframeのURLをリセット/停止
-        if (youtubeIframe) youtubeIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}`; 
-        if (eduIframe) eduIframe.src = ''; 
-        if (highQualityIframe) highQualityIframe.src = '';
-
-
-        // --- 選択されたプレーヤーの表示と処理 ---
-        
         if (playerId === 'yuzutube-player') {
-            yuzuPlayer.style.display = 'block';
-
-            if (mode === 'normal') {
-                const url360p = await get360pUrl(videoId);
-                
-                if (url360p) {
-                    videoElement.src = url360p; 
-                    videoElement.load();
-                    if (yuzuBtn) yuzuBtn.style.backgroundColor = 'var(--yt-light-dark)';
-                } else {
-                    return; // URL取得失敗
-                }
+            const url = await get360pUrl();
+            if (url) {
+                videoElement.src = url;
+                videoElement.play();
             }
-            
-        } else if (playerId === 'high-quality-player') {
-            
-            highQualityPlayer.style.display = 'block';
-            
-            if (highQualityIframe) {
-                const streamHighUrl = `/api/stream_high/${videoId}`;
-                if (highQualityIframe.src === '' || !highQualityIframe.src.includes(streamHighUrl)) {
-                    highQualityIframe.src = streamHighUrl;
-                }
-            }
-
-            if (highQualityBtn) highQualityBtn.style.backgroundColor = 'var(--yt-light-dark)';
-            
         } else if (playerId === 'youtube-embed-player') {
-            
-            youtubePlayer.style.display = 'block';
-            
-            if (youtubeBtn) youtubeBtn.style.backgroundColor = 'var(--yt-light-dark)';
-            
-            // YouTube埋め込みを自動再生
-            if (youtubeIframe) {
-                let currentSrc = youtubeIframe.src;
-                if (!currentSrc.includes('autoplay=1')) {
-                    currentSrc += currentSrc.includes('?') ? '&autoplay=1' : '?autoplay=1';
-                }
-                youtubeIframe.src = currentSrc;
-            }
-            
+            document.getElementById('youtube-iframe').src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
         } else if (playerId === 'edu-embed-player') {
-            
-            eduPlayer.style.display = 'block';
-            
-            if (eduBtn) eduBtn.style.backgroundColor = 'var(--yt-light-dark)';
-            
-            // EDU iframeのsrcを設定
-            if (eduIframe) {
-                if (eduIframe.src === '' || !eduIframe.src.includes(`/api/edu/${videoId}`)) {
-                    eduIframe.src = `/api/edu/${videoId}`;
-                }
-            }
+            document.getElementById('edu-iframe').src = `/api/edu/${videoId}`;
         }
     }
-    
 
-    // ページロード時の初期設定
+    async function startDownload() {
+        const url = await get360pUrl();
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${videoId}.mp4`;
+            a.click();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        loadComments(videoId);
+        // コメント読み込み（読み込み完了後にスケルトンを消去）
+        fetch(`/comments?v=${videoId}`).then(r => r.text()).then(html => {
+            document.getElementById('comment-list').innerHTML = html;
+        }).catch(() => {
+            document.getElementById('comment-list').innerHTML = 'コメントを読み込めませんでした。';
+        });
         
-        // ページロード時は通常再生をアクティブにする
-        showPlayer('yuzutube-player', 'normal'); 
+        showPlayer('yuzutube-player');
+    });
+</script>
+{% endblock %}{% extends "base.html" %}
+
+{% block title %}{{ video_title }} - YouTube{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --yt-bg: #0f0f0f;
+        --yt-text: #ffffff;
+        --yt-sub-text: #aaaaaa;
+        --yt-button-bg: #272727;
+        --yt-button-hover: #3f3f3f;
+        --skeleton-bg: #272727;
+    }
+
+    body {
+        background-color: var(--yt-bg);
+        color: var(--yt-text);
+        margin: 0;
+        font-family: "Roboto", "Arial", sans-serif;
+    }
+
+    .watch-page-container {
+        display: flex;
+        flex-direction: row;
+        gap: 24px;
+        padding: 20px 5%;
+        max-width: 1700px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 1000px) {
+        .watch-page-container { flex-direction: column; }
+    }
+
+    .main-video-area { flex: 3; }
+
+    /* スケルトンアニメーション */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.4; }
+        100% { opacity: 1; }
+    }
+
+    .skeleton {
+        background-color: var(--skeleton-bg);
+        border-radius: 8px;
+        animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    /* プレーヤー */
+    .video-container {
+        width: 100%;
+        aspect-ratio: 16/9;
+        background-color: black;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    /* ボタン群 */
+    .action-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .yt-btn {
+        padding: 0 16px;
+        height: 36px;
+        border-radius: 18px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: var(--yt-button-bg);
+        color: var(--yt-text);
+        display: flex;
+        align-items: center;
+        transition: background-color 0.2s;
+    }
+
+    .yt-btn:hover { background-color: var(--yt-button-hover); }
+
+    .yt-btn-primary { background-color: #f1f1f1; color: #0f0f0f; }
+
+    /* メタデータ */
+    .video-title { font-size: 20px; font-weight: bold; margin-bottom: 12px; }
+
+    .channel-section { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+
+    .author-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+    .description-box {
+        background-color: var(--yt-button-bg);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+        margin-top: 12px;
+    }
+
+    /* おすすめセクション */
+    .recommended-videos { flex: 1; min-width: 300px; }
+
+    .recommended-card {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        text-decoration: none;
+    }
+
+    .recommended-card img {
+        width: 168px;
+        aspect-ratio: 16/9;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    /* コメント用スケルトン */
+    .comment-skeleton {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .circle-skeleton { width: 40px; height: 40px; border-radius: 50%; }
+    .line-skeleton { height: 12px; margin-bottom: 8px; border-radius: 4px; }
+</style>
+
+<div class="watch-page-container">
+    <div class="main-video-area">
+        {# 操作バー #}
+        <div class="action-bar">
+            <button id="yuzu-btn" class="yt-btn" onclick="showPlayer('yuzutube-player');">通常再生</button>
+            <button id="youtube-btn" class="yt-btn" onclick="showPlayer('youtube-embed-player');">YouTube版</button>
+            <button id="edu-btn" class="yt-btn" onclick="showPlayer('edu-embed-player');">外部プレーヤー</button>
+            <div style="flex-grow: 1;"></div>
+            <button id="download-btn" class="yt-btn yt-btn-primary" onclick="startDownload();">オフライン保存</button>
+        </div>
+
+        {# プレーヤーエリア #}
+        <div id="yuzutube-player" class="video-container">
+            <video id="player" style="width:100%; height: 100%; outline:none;" playsinline controls poster="/thumbnail?v={{ videoid }}" loop></video>
+        </div>
+
+        <div id="youtube-embed-player" class="video-container" style="display: none;">
+            <iframe id="youtube-iframe" width="100%" height="100%" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <div id="edu-embed-player" class="video-container" style="display: none;">
+            <iframe id="edu-iframe" width="100%" height="100%" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <h1 class="video-title">{{ video_title }}</h1>
+
+        <div class="channel-section">
+            <a href="/channel/{{ author_id }}">
+                <img src="{{ author_icon }}" class="author-img">
+            </a>
+            <div>
+                <a href="/channel/{{ author_id }}" style="color: var(--yt-text); font-weight: bold; text-decoration: none;">{{ author }}</a>
+                <p style="font-size: 12px; color: var(--yt-sub-text); margin: 0;">{{ subscribers_count }}</p>
+            </div>
+            <button class="yt-btn" style="background-color: #f1f1f1; color: #0f0f0f; margin-left: 12px; font-weight: bold; border-radius: 18px;">チャンネル登録</button>
+            <div style="flex-grow: 1; text-align: right; color: var(--yt-sub-text); font-size: 14px;">
+                👍 {{ like_count }}
+            </div>
+        </div>
+        
+        <div class="description-box">
+            <div style="font-weight: bold; margin-bottom: 4px;">{{ view_count }} • {{ length_text }}</div>
+            <p style="white-space: pre-wrap; margin: 0;">{{ description | safe }}</p>
+        </div>
+
+        {# コメントセクション (スケルトン付き) #}
+        <div id="comments-container" style="margin-top: 24px;">
+            <h2 style="font-size: 18px; margin-bottom: 20px;">コメント</h2>
+            <div id="comment-list">
+                {% for i in range(3) %}
+                <div class="comment-skeleton">
+                    <div class="skeleton circle-skeleton"></div>
+                    <div style="flex: 1;">
+                        <div class="skeleton line-skeleton" style="width: 30%;"></div>
+                        <div class="skeleton line-skeleton" style="width: 80%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {# おすすめ動画 #}
+    <div class="recommended-videos">
+        {% for video in recommended_videos %}
+        {% set link_url = "/watch?v=" + video.video_id if video.type == 'video' else "/playlist?list=" + video.id %}
+        <a href="{{ link_url }}" class="recommended-card">
+            <img src="{{ video.thumbnail_url }}">
+            <div class="recommended-meta">
+                <p style="color: var(--yt-text); font-weight: 500; font-size: 14px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ video.title }}</p>
+                <p style="color: var(--yt-sub-text); font-size: 12px;">{{ video.author }}</p>
+                <p style="color: var(--yt-sub-text); font-size: 12px;">{{ video.view_count_text }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    let cached360pUrl = null; 
+    const videoId = '{{ videoid }}';
+    const videoElement = document.getElementById('player');
+    
+    async function get360pUrl() {
+        if (cached360pUrl) return cached360pUrl;
+        const btn = document.getElementById('yuzu-btn');
+        btn.innerHTML = '<div class="skeleton" style="width:60px; height:14px; border-radius:4px;"></div>';
+        try {
+            const response = await fetch(`/api/stream_360p_url/${videoId}`);
+            const data = await response.json();
+            cached360pUrl = data.stream_url;
+            btn.textContent = '通常再生';
+            return cached360pUrl;
+        } catch (e) {
+            btn.textContent = 'エラー';
+            return null;
+        }
+    }
+
+    async function showPlayer(playerId) {
+        ['yuzutube-player', 'youtube-embed-player', 'edu-embed-player'].forEach(id => {
+            document.getElementById(id).style.display = (id === playerId) ? 'block' : 'none';
+        });
+
+        videoElement.pause();
+        document.getElementById('youtube-iframe').src = '';
+        document.getElementById('edu-iframe').src = '';
+
+        if (playerId === 'yuzutube-player') {
+            const url = await get360pUrl();
+            if (url) {
+                videoElement.src = url;
+                videoElement.play();
+            }
+        } else if (playerId === 'youtube-embed-player') {
+            document.getElementById('youtube-iframe').src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
+        } else if (playerId === 'edu-embed-player') {
+            document.getElementById('edu-iframe').src = `/api/edu/${videoId}`;
+        }
+    }
+
+    async function startDownload() {
+        const url = await get360pUrl();
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${videoId}.mp4`;
+            a.click();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // コメント読み込み（読み込み完了後にスケルトンを消去）
+        fetch(`/comments?v=${videoId}`).then(r => r.text()).then(html => {
+            document.getElementById('comment-list').innerHTML = html;
+        }).catch(() => {
+            document.getElementById('comment-list').innerHTML = 'コメントを読み込めませんでした。';
+        });
+        
+        showPlayer('yuzutube-player');
     });
 </script>
 {% endblock %}
